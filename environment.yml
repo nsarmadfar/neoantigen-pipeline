@@ -1,0 +1,12 @@
+name: neoantigen-pipeline
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - mhcflurry=2.3
+  - tensorflow
+  - pandas
+  - numpy
+  - matplotlib
+  - pyyaml

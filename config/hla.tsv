@@ -1,0 +1,10 @@
+# MHC class I genotype of HCC1395.
+# Typing from Cellosaurus CVCL_1249, which cites Boegel et al. 2014
+# (OncoImmunology 3:e954893) and Scholtalbers et al. 2015 (Genome Med 7:118).
+# HLA-A*29:02 is homozygous, so the cell line has five distinct alleles.
+allele	gene	note
+HLA-A*29:02	A	homozygous
+HLA-B*08:01	B
+HLA-B*45:01	B
+HLA-C*06:02	C
+HLA-C*07:01	C

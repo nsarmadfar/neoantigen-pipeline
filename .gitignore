@@ -1,0 +1,14 @@
+# downloaded and simulated input data (re-created by the pipeline)
+data/raw/
+data/ref/
+data/test/
+
+# output of the test run (re-created by ./run_pipeline.sh --test)
+results/test/
+
+# large intermediate output
+results/all_scored_peptides.tsv.gz
+
+__pycache__/
+.DS_Store
+*.log

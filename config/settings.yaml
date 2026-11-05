@@ -1,0 +1,33 @@
+# Settings for the neoantigen pipeline.
+# Paths are relative to the project folder.
+
+sample: HCC1395
+assembly: GRCh38
+ensembl_release: 110
+
+# MHC class I mostly presents peptides of 8-11 amino acids.
+peptide_lengths: [8, 9, 10, 11]
+
+filters:
+  # A gene has to be transcribed before its mutant protein can be presented.
+  min_tpm: 1.0
+  # MHCflurry presentation percentile: lower is better, 2 is the usual cut-off
+  # for "likely presented".
+  max_presentation_percentile: 2.0
+  # Candidates whose mutant peptide binds much better than the normal version
+  # are more interesting, because the immune system has not learned to
+  # tolerate them. Ratio of normal to mutant affinity; 1 means no difference.
+  min_agretopicity: 1.0
+
+downloads:
+  gtf: https://ftp.ensembl.org/pub/release-110/gtf/homo_sapiens/Homo_sapiens.GRCh38.110.chr.gtf.gz
+  cds: https://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/cds/Homo_sapiens.GRCh38.cds.all.fa.gz
+  pep: https://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/pep/Homo_sapiens.GRCh38.pep.all.fa.gz
+  snv: https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/seqc/Somatic_Mutation_WG/release/latest/high-confidence_sSNV_in_HC_regions_v1.2.1.vcf.gz
+  indel: https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/seqc/Somatic_Mutation_WG/release/latest/high-confidence_sINDEL_in_HC_regions_v1.2.1.vcf.gz
+  # RNA-seq of 675 cancer cell lines (Klijn et al. 2015), as processed by
+  # EMBL-EBI Expression Atlas. Big file (about 0.5 GB); only the HCC1395
+  # column is kept.
+  expression: https://ftp.ebi.ac.uk/pub/databases/microarray/data/atlas/experiments/E-MTAB-2706/E-MTAB-2706-tpms.tsv
+  # Assay group for HCC1395 in that matrix, from E-MTAB-2706-configuration.xml.
+  expression_column: g517

@@ -1,0 +1,7 @@
+# HLA alleles used for the simulated test data.
+# HLA-A*02:01 is the allele the two planted positive-control epitopes are
+# known to be presented by; HLA-B*07:02 is there so that the per-allele
+# summary has more than one bar.
+allele	gene	note
+HLA-A*02:01	A	presents the positive controls
+HLA-B*07:02	B
