@@ -76,7 +76,7 @@ conda env create -f environment.yml
 conda activate neoantigen-pipeline
 
 ./run_pipeline.sh --test   # simulated data, then check the answers (about 2 min)
-./run_pipeline.sh          # HCC1395, downloading about 1 GB on the first run
+./run_pipeline.sh          # HCC1395, downloading about 600 MB on the first run
 ```
 
 The MHCflurry models (about 100 MB) are fetched on first use. Everything else is downloaded by step 1: the Ensembl 110 reference, the SEQC2 somatic truth set, and the expression table.
@@ -99,6 +99,7 @@ Thresholds live in `config/settings.yaml`.
 | `results/candidates.tsv` | the ranked shortlist: peptide, allele, scores, expression, the variant it comes from |
 | `results/variants.tsv` | every variant with its consequence and protein change |
 | `results/peptides.tsv` | every mutant peptide that survived the self filter |
+| `results/annotation_summary.tsv`, `results/peptide_summary.tsv` | counts per consequence, and what was skipped and why |
 | `results/all_scored_peptides.tsv.gz` | all peptide/allele pairs with their scores, before filtering |
 | `results/filter_funnel.png` | how many peptide/allele pairs each filter removes |
 | `results/mutant_vs_normal_affinity.png` | mutant against normal predicted affinity |
@@ -117,9 +118,44 @@ Thresholds live in `config/settings.yaml`.
 
 ## Results on HCC1395
 
-HCC1395 is a breast cancer cell line that the SEQC2 consortium sequenced many times over to build a reference set of somatic mutations, which makes it a good test case: the variants are agreed on, and the HLA type and the RNA-seq are published.
+HCC1395 is a breast cancer cell line that the SEQC2 consortium sequenced many times over to build a reference set of somatic mutations, which makes it a good test case: the variants are agreed on, and both the HLA type and RNA-seq of the line are published. Its five class I alleles are HLA-A\*29:02 (homozygous), B\*08:01, B\*45:01, C\*06:02 and C\*07:01.
 
-*(filled in below from the run in this repository)*
+**From 41,072 somatic variants to 395 peptides.** Of the 39,447 high-confidence SNVs and 1,625 indels, 453 fall in the coding part of a canonical transcript (458 variant/transcript pairs, because a few sit in two overlapping genes), and most of those do nothing interesting:
+
+| | |
+| --- | --- |
+| missense | 318 |
+| synonymous | 109 |
+| stop gained | 16 |
+| frameshift | 10 |
+| in-frame deletion | 4 |
+| stop lost | 1 |
+
+The 332 variants that change a protein without truncating it give 13,875 peptide windows, of which 204 are thrown out because they also occur somewhere in the normal proteome. Scoring the remaining 13,671 peptides against all five alleles gives 68,355 peptide/allele pairs, and the filters then cut that down hard:
+
+![what each filter removes](results/filter_funnel.png)
+
+What is left is **558 peptide/allele pairs, 395 distinct peptides from 127 genes**: 332 from missense variants, 53 from frameshifts and 10 from in-frame deletions. Frameshifts are worth their own line here. They are only 10 of the variants but produce 53 of the candidates, because a frameshift replaces the whole C-terminus with sequence that has never existed in a human protein, so almost every window over it is tumour-specific.
+
+The top of the list:
+
+| rank | gene | peptide | allele | affinity (nM) | mutant vs normal | TPM | VAF |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | ENPP2 | FLYGRPAVL | B\*08:01 | 22 | 1.3x | 7 | 0.07 |
+| 5 | COL6A1 | SPNSRIAL | B\*08:01 | 38 | 1.1x | 387 | 0.08 |
+| 7 | ADPRHL1 | QENWFYFEA | B\*45:01 | 33 | 1.1x | 4 | 0.54 |
+| 8 | DBN1 | SEVEKAAAIIA | B\*45:01 | 26 | 1.1x | 68 | 0.30 |
+| 9 | MPG | FFDQPAVHL | B\*08:01 | 31 | 3.3x | 92 | 0.14 |
+
+![mutant against normal affinity](results/mutant_vs_normal_affinity.png)
+
+Two things in that table are worth being honest about. The top-ranked peptide comes from a variant present in only 7% of the tumour reads, so it is probably subclonal and a poor vaccine target however well it binds; ranking on presentation alone does not see that. And the mutant-to-normal ratios are mostly close to 1, meaning the mutation barely changes the binding: the peptide was already a good binder and the mutation happens to sit in it.
+
+**Two checks against what is already known.** The pipeline finds the TP53 p.R175H substitution that Cellosaurus lists for this cell line, homozygous, at a variant allele frequency of 0.99. It then does *not* put it forward as a candidate, and that is the right answer: the published R175H neoepitope HMTEVVRHC is presented by HLA-A\*02:01, which HCC1395 does not carry. Scored against the alleles this cell line actually has, the same peptide comes out at 3,211 to 31,720 nM, far too weak to be presented. A pipeline that reported a famous neoantigen regardless of the patient's HLA type would be worse than useless, and this is the kind of mistake the HLA step exists to prevent.
+
+![candidates by presenting allele](results/candidates_per_allele.png)
+
+The candidates are spread over all five alleles, with the two HLA-C alleles accounting for more than half of them. That is partly real and partly a quirk of the data MHCflurry was trained on, which contains less HLA-C than HLA-A and HLA-B.
 
 ## References
 

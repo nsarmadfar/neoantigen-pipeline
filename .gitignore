@@ -6,8 +6,10 @@ data/test/
 # output of the test run (re-created by ./run_pipeline.sh --test)
 results/test/
 
-# large intermediate output
+# large intermediate output (re-created from peptides.tsv by step 5)
 results/all_scored_peptides.tsv.gz
+results/binding_mutant.tsv
+results/binding_normal.tsv
 
 __pycache__/
 .DS_Store

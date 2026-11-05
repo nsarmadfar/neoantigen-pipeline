@@ -1,0 +1,8 @@
+item	value
+all mutant peptides scored	68355
+presented (percentile <= 2)	1458
+and gene expressed (>= 1 TPM)	806
+and binds better than normal (>= 1x)	558
+distinct candidate peptides	395
+genes with a candidate	127
+variants with a candidate	128

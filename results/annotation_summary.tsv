@@ -1,0 +1,10 @@
+item	count
+variants not annotated on any transcript	21737
+variants outside coding sequence	18879
+missense	318
+synonymous	109
+stop_gained	16
+frameshift	10
+inframe_deletion	4
+skipped: outside the coding blocks	4
+stop_lost	1

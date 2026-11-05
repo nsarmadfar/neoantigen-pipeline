@@ -270,12 +270,13 @@ def make_variants(genes, planted):
             entry = dict(
                 variant_id=f"{CHROM}:{pos}:{ref}>{alt}", gene=name,
                 consequence=consequence,
-                protein_change=(
-                    f"p.{change['from_residue']}{change['residue_index'] + 1}"
-                    f"{change['to_residue']}"),
             )
-            if consequence == "missense":
-                entry["mutant_protein_residue"] = change["to_residue"]
+            # A synonymous variant leaves the protein alone, so there is no
+            # protein change to report for it.
+            if consequence in ("missense", "stop_gained"):
+                entry["protein_change"] = (
+                    f"p.{change['from_residue']}{change['residue_index'] + 1}"
+                    f"{change['to_residue']}")
             truth.append(entry)
 
         elif kind == "frameshift":

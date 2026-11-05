@@ -41,7 +41,7 @@ plt.rcParams.update({
 def save(fig, out_dir, name):
     fig.tight_layout()
     for suffix in ("png", "svg"):
-        fig.savefig(Path(out_dir) / f"{name}.{suffix}", bbox_inches="tight")
+        fig.savefig(Path(out_dir) / f"{name}.{suffix}", bbox_inches="tight", dpi=150)
     plt.close(fig)
 
 
@@ -75,6 +75,13 @@ def binding_figure(df, out_dir):
     ]
     ax.plot(limits, limits, color="#b9b8b1", linewidth=1, zorder=1)
     ax.axhline(500, color="#b9b8b1", linewidth=1, linestyle=(0, (4, 3)), zorder=1)
+    ax.text(limits[0] * 1.3, 530, "500 nM, the usual line for a binder",
+            fontsize=8.5, color=INK_SOFT, va="bottom")
+
+    # With tens of thousands of peptides the cloud would turn into a solid
+    # block, so the dots shrink as the list grows.
+    crowded = len(paired) > 5_000
+    size, alpha = (9, 0.35) if crowded else (26, 0.75)
 
     groups = [("passes every filter", AQUA), ("presented, but filtered out", ORANGE),
               ("not presented", BLUE)]
@@ -82,16 +89,31 @@ def binding_figure(df, out_dir):
         subset = paired[paired["group"] == label]
         if subset.empty:
             continue
-        ax.scatter(subset["wt_affinity"], subset["affinity"], s=26, color=colour,
-                   alpha=0.75, linewidths=0.6, edgecolors=SURFACE, label=label,
-                   zorder=3 if label.startswith("passes") else 2)
+        passes = label.startswith("passes")
+        ax.scatter(subset["wt_affinity"], subset["affinity"],
+                   s=26 if passes else size, color=colour,
+                   alpha=0.9 if passes else alpha,
+                   linewidths=0.6 if passes else 0,
+                   edgecolors=SURFACE, label=label, zorder=3 if passes else 2,
+                   # Tens of thousands of dots as vector paths make an SVG of
+                   # several MB; as pixels it stays small, and the text around
+                   # it is still vector.
+                   rasterized=crowded)
 
-    best = paired[paired["group"] == groups[0][0]].nsmallest(5, "presentation_percentile")
-    for _, row in best.iterrows():
-        ax.annotate(f"{row['gene_name']} {row['peptide']}",
-                    (row["wt_affinity"], row["affinity"]),
-                    textcoords="offset points", xytext=(7, -3),
-                    fontsize=8, color=INK)
+    # Name the best few. The labels go in a column on the left with a thin
+    # leader line, because at this density they would otherwise sit on top of
+    # each other and on the points.
+    best = (paired[paired["group"] == groups[0][0]]
+            .sort_values("presentation_percentile")
+            .drop_duplicates("peptide")
+            .head(4))
+    for index, (_, row) in enumerate(best.iterrows()):
+        ax.annotate(f"{row['gene_name']} {row['peptide']} ({row['allele']})",
+                    xy=(row["wt_affinity"], row["affinity"]), xycoords="data",
+                    xytext=(0.035, 0.30 - 0.055 * index), textcoords="axes fraction",
+                    fontsize=8, color=INK, va="center",
+                    arrowprops=dict(arrowstyle="-", color="#b9b8b1", linewidth=0.7,
+                                    shrinkA=2, shrinkB=3))
 
     ax.set_xscale("log"); ax.set_yscale("log")
     ax.set_xlim(limits); ax.set_ylim(limits)
